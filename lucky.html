@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幸运大轮盘</title>
+    <style>
+        body {
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(-45deg, #e56f26 , #ff6b6b , #4ecdc4 , #f7d794);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+
+        }
+        .container {
+            text-align: center;
+        }
+        button {
+            font-size: 18px;
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            background-color: rgba(76, 175, 80, 0.8);
+            color: white;
+        }
+        content{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50vh;
+        }
+        #result {
+            font-size: 128px;
+            margin: 30px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .digit-container {
+            display: inline-block;
+            width: 1em;
+            height: 1.2em;
+            overflow: hidden;
+            background-color: #2f0707d4;
+            color: #fff;
+            border-radius: 5px;
+            margin: 0 2px;
+            vertical-align: top;
+            border-radius: 5px;
+        }
+        .digit-strip {
+            transition: transform 0.1s linear;
+        }
+        .digit {
+            height: 1.2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .digit-num{
+            width:40px;
+            height:40px;
+            text-align:right;
+            font-weight:bold;
+            border: none;
+            outline: none;
+            background-color: rgba(200, 200, 200, 0.2);
+            border-radius: 10px;
+        }
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: none;
+            color: #80808080;
+            text-align: right;
+            padding: 10px 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>幸运大轮盘</h1>
+
+        <content>
+            <div id="result">
+                <div class="digit-container"><div class="digit-strip"><div class="digit">-</div></div></div>
+                <div class="digit-container"><div class="digit-strip"><div class="digit">-</div></div></div>
+            </div>
+        </content>
+        <button onclick="startRandomNumberGeneration()">看看谁是幸运儿</button>
+
+        <div>
+            <label>今天有</label>
+            <input class="digit-num" type="number" id="txtNum" step="1" name="number" value="52" placeholder="两亿">
+            <label>个幸运儿</label>
+        </div>
+    </div>
+    <footer><p>©2024,Aramyang。 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>已在<a style="color:#808080" href="http://www.github.com/crabo/sinaquant">Github</a>开源，使用的主题 由 GPT4 辅助开发.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></footer>
+    <p></p>
+    <script type="text/javascript">
+        let calledNumbers=[];
+        function getUncallNumber(){
+            let person = txtNum.value;
+            if(calledNumbers.length>Math.floor(person*0.4)) calledNumbers=[];
+
+            let n = Math.ceil(Math.random() * person);
+            while(calledNumbers.includes(n)){//重复则重叫
+               n=Math.ceil(Math.random() * person)
+            }
+            //避免重复叫号，记录已呼叫总人数40%
+            if(calledNumbers.length>=Math.floor(person*0.4)) calledNumbers.shift();
+            calledNumbers.push(n);
+            console.info('-- 随机数为:'+n +' / '+calledNumbers);
+            return n;
+        }
+        function startRandomNumberGeneration() {
+            let person = txtNum.value;
+            const randomNumber = (100+getUncallNumber()).toString();// 设置最终随机数
+
+            const digitStrips = document.querySelectorAll('.digit-strip');
+            digitStrips.forEach((strip, i) => {
+                rollDigit(strip, randomNumber[i+1]); //随机数的字符 按位拆分(去百位）
+            });
+        }
+
+        function rollDigit(digitStrip,i) {
+            const allNumbers = Array.from({length: 60}, () => Math.floor(Math.random() * 10));
+            allNumbers.splice(55,0,i); //在55设置命中的随机数
+            
+            digitStrip.innerHTML = allNumbers.map(num => `<div class="digit">${num}</div>`).join('');
+            
+            let currentPosition = 0;
+            const totalRolls = 9 + Math.floor(Math.random() * 3); // 9-12 rolls
+
+            function roll() {
+                if (currentPosition < totalRolls) {
+                    currentPosition++;
+                    digitStrip.style.transform = `translateY(${-currentPosition * 1.2}em)`;
+                    setTimeout(roll, 50);
+                } else {
+                    finishRoll();
+                }
+            }
+
+            function finishRoll() {
+                //const finalNumber = Math.floor(Math.random() * 10);
+                //const finalPosition = allNumbers.length - 10 + finalNumber;
+                const finalPosition = 55;
+                digitStrip.style.transition = 'transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1.5)';
+                digitStrip.style.transform = `translateY(${-finalPosition * 1.2}em)`;
+            }
+
+            roll();
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                startRandomNumberGeneration();
+            }
+        });
+    </script>
+</body>
+</html>
