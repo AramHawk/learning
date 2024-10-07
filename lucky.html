@@ -79,6 +79,68 @@
             background-color: rgba(200, 200, 200, 0.2);
             border-radius: 10px;
         }
+        .digit-disappear{
+            width: 140px;
+            height: 40px;
+            text-align:left;
+            font-weight:bold;
+            border: none;
+            outline: none;
+            background-color: rgba(200, 200, 200, 0.2);
+            border-radius: 10px;
+        }
+
+
+        /* 隐藏默认复选框 */
+        .custom-checkbox input[type="checkbox"] {
+            display: none; /* 隐藏原始复选框 */
+        }
+
+        /* 自定义复选框样式 */
+        .custom-checkbox {
+            position: relative; /* 使其相对定位 */
+            padding-left: 30px; /* 左边距 */
+            cursor: pointer; /* 鼠标悬停时显示手型 */
+            user-select: none; /* 禁止文本选择 */
+            font-size: 18px; /* 字体大小 */
+        }
+
+        /* 自定义复选框的背景 */
+        .checkmark {
+            position: absolute; /* 绝对定位 */
+            top: 0; /* 上边距 */
+            left: 0; /* 左边距 */
+            height: 20px; /* 高度 */
+            width: 20px; /* 宽度 */
+            background-color: #f0f0f0; /* 背景颜色 */
+            border-radius: 4px; /* 圆角 */
+            transition: background-color 0.3s; /* 添加过渡效果 */
+        }
+
+        /* 鼠标悬停时的背景颜色 */
+        .custom-checkbox:hover .checkmark {
+            background-color: #d0d0d0; /* 悬停时背景颜色 */
+        }
+
+        /* 选中状态样式 */
+        .custom-checkbox input[type="checkbox"]:checked + .checkmark {
+            background-color: #4ecdc4; /* 选中时背景颜色 */
+        }
+
+        /* 选中状态的勾选标记 */
+        .custom-checkbox input[type="checkbox"]:checked + .checkmark::after {
+            content: ''; /* 创建伪元素 */
+            position: absolute; /* 绝对定位 */
+            left: 6px; /* 左边距 */
+            top: 2px; /* 上边距 */
+            width: 5px; /* 勾选标记宽度 */
+            height: 10px; /* 勾选标记高度 */
+            border: solid white; /* 勾选标记颜色 */
+            border-width: 0 2px 2px 0; /* 勾选标记的边框宽度 */
+            transform: rotate(45deg); /* 旋转以形成勾选形状 */
+        }
+
+        
         footer {
             position: fixed;
             bottom: 0;
@@ -87,6 +149,7 @@
             color: #80808080;
             text-align: right;
             padding: 10px 20px;
+
         }
 
     </style>
@@ -105,11 +168,19 @@
 
         <div>
             <label>今天有</label>
-            <input class="digit-num" type="number" id="txtNum" step="1" name="number" value="52" placeholder="两亿">
+            <input class="digit-num" type="number" id="txtNum" step="1" name="number" value="53" placeholder="一坤">
             <label>个幸运儿</label>
         </div>
+        <div>
+            <label class="custom-checkbox">
+                <input type="checkbox" id="chk1">
+                <span class="checkmark"></span>
+                没来的可怜孩子:
+            </label>
+            <input class="digit-disappear" type="text" id="txtUncall" name="number" value="" placeholder="比如：13,21">
+        </div>
     </div>
-    <footer><p>©2024,Aramyang。 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>已在<a style="color:#808080" href="http://www.github.com/aramhawk/learning">Github</a>开源，使用的主题 由 GPT4 辅助开发.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></footer>
+    <footer><p>©2024,Aramyang。 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>已在<a style="color:#808080" href="https://www.github.com/aramhawk/learning">Github</a>开源，使用的主题 由 GPT4 辅助开发.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></footer>
     <p></p>
     <script type="text/javascript">
         let calledNumbers=[];
@@ -117,10 +188,12 @@
             let person = txtNum.value;
             if(calledNumbers.length>Math.floor(person*0.4)) calledNumbers=[];
 
-            let n = Math.ceil(Math.random() * person);
-            while(calledNumbers.includes(n)){//重复则重叫
-               n=Math.ceil(Math.random() * person)
-            }
+            let n,k=50;
+            do {
+                n = Math.ceil(Math.random() * person);
+                k--;
+            } while (k>0 && (calledNumbers.includes(n) || (chk1.checked && txtUncall.value.split(',').includes(n.toString()) ))); // 确保输入框的值不被抽取
+
             //避免重复叫号，记录已呼叫总人数40%
             if(calledNumbers.length>=Math.floor(person*0.4)) calledNumbers.shift();
             calledNumbers.push(n);
@@ -160,7 +233,7 @@
                 //const finalNumber = Math.floor(Math.random() * 10);
                 //const finalPosition = allNumbers.length - 10 + finalNumber;
                 const finalPosition = 55;
-                digitStrip.style.transition = 'transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1.5)';
+                digitStrip.style.transition = 'transform 0.1s cubic-bezier(0.25, 0.1, 0.25, 1.5)';
                 digitStrip.style.transform = `translateY(${-finalPosition * 1.2}em)`;
             }
 
