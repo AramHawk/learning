@@ -195,7 +195,7 @@
             }
             
             // 返回需要的数量
-            return numbers.slice(0, count);
+            return numbers;
         }
         function getUncallNumber(){
             let person = +txtNum.value;
@@ -255,12 +255,10 @@
         function setCookie(name, li) {
             localStorage.setItem(name, li.join(','))
         }
-
         function getCookie(name) {
             const v = localStorage.getItem(name);
             try {
-                v1 = v.split(',');
-                return v1;
+                return v.split(',');
             } catch(e) {
                 return [];
             }
