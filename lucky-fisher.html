@@ -195,11 +195,11 @@
             }
             
             // 返回需要的数量
-            return numbers;
+            return numbers.slice(0,count);
         }
         function getUncallNumber(){
             let person = +txtNum.value;
-            if(pendingNumbers.length<(person*0.1)+1) pendingNumbers=_getRandom(person, person*0.4);
+            if(pendingNumbers.length<(person*0.1)+1 || pendingNumbers.length>person*0.4) pendingNumbers=_getRandom(person, person*0.4);
 
             let n = +pendingNumbers.pop();
             while(n>person || (chk1.checked && txtUncall.value.split(',').includes(n.toString())) ){// 确保输入框的值不被抽取
