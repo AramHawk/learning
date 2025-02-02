@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彩票游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffeb3b; /* 黄色背景 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+        }
+        .game-container {
+            background-color: #ff5722; /* 红色背景 */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            color: white; /* 白色文字 */
+            width: 300px;
+        }
+        h1 {
+            color: #fff; /* 白色标题 */
+            margin-bottom: 20px;
+        }
+        .money-display {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #ffeb3b; /* 黄色金额显示 */
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #fff; /* 白色标签 */
+        }
+        input, select {
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #ffeb3b; /* 黄色按钮 */
+            color: #ff5722; /* 红色文字 */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #fdd835; /* 深黄色悬停效果 */
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #ffeb3b; /* 黄色结果文字 */
+        }
+        .history {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #fff; /* 白色历史记录 */
+            display: none; /* 默认隐藏 */
+        }
+        .restart-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: #ff5722;
+            color: #fff;
+        }
+        .toggle-history {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>彩票游戏</h1>
+        <div class="money-display" id="money-display">当前金额：100 元</div>
+        <div class="input-group">
+            <label for="percentage">选择投入占比：</label>
+            <select id="percentage">
+                <option value="1">100%</option>
+                <option value="2">50%</option>
+                <option value="3">1/3</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="lottery">选择号码（1-5）：</label>
+            <input type="number" id="lottery" min="1" max="5" value="1">
+        </div>
+        <button onclick="playGame()">购买彩票</button>
+        <button onclick="clearRecords()">清空战绩</button>
+        <button class="toggle-history" onclick="toggleHistory()">历史记录</button>
+        <div class="result" id="result"></div>
+        <div class="history" id="history">
+            <p>最高金额：<span id="max-money">0</span> 元</p>
+            <p>最高轮数：<span id="max-round">0</span> 轮</p>
+            <p>单次最大盈利：<span id="max-profit">0</span> 元</p>
+            <p>总盈利：<span id="total-profit">0</span> 元</p>
+            <p>总亏损：<span id="total-loss">0</span> 元</p>
+        </div>
+        <div class="single-round">
+            <p>当前轮数：<span id="current-round">0</span> 轮</p>
+            <p>本局盈利：<span id="single-profit">0</span> 元</p>
+            <p>本局亏损：<span id="single-loss">0</span> 元</p>
+        </div>
+    </div>
+    <button class="restart-button" onclick="restartGame()">重新开始</button>
+
+    <script>
+        let money = 100;
+        let time = 0;
+        let moneymax = 0;
+        let maxRound = 0;
+        let maxProfit = 0;
+        let totalProfit = 0;
+        let totalLoss = 0;
+        let singleProfit = 0;
+        let singleLoss = 0;
+
+        // 从 Cookie 中加载战绩
+        function loadFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.trim().split('=');
+                if (key === "moneymax") {
+                    moneymax = parseFloat(value);
+                    document.getElementById('max-money').textContent = moneymax.toFixed(2);
+                } else if (key === "maxRound") {
+                    maxRound = parseInt(value);
+                    document.getElementById('max-round').textContent = maxRound;
+                } else if (key === "maxProfit") {
+                    maxProfit = parseFloat(value);
+                    document.getElementById('max-profit').textContent = maxProfit.toFixed(2);
+                } else if (key === "totalProfit") {
+                    totalProfit = parseFloat(value);
+                    document.getElementById('total-profit').textContent = totalProfit.toFixed(2);
+                } else if (key === "totalLoss") {
+                    totalLoss = parseFloat(value);
+                    document.getElementById('total-loss').textContent = totalLoss.toFixed(2);
+                }
+            }
+        }
+
+        // 保存战绩到 Cookie
+        function saveToCookie() {
+            document.cookie = `moneymax=${moneymax}; path=/; max-age=31536000`; // 保存 1 年
+            document.cookie = `maxRound=${maxRound}; path=/; max-age=31536000`; // 保存 1 年
+            document.cookie = `maxProfit=${maxProfit}; path=/; max-age=31536000`; // 保存 1 年
+            document.cookie = `totalProfit=${totalProfit}; path=/; max-age=31536000`; // 保存 1 年
+            document.cookie = `totalLoss=${totalLoss}; path=/; max-age=31536000`; // 保存 1 年
+        }
+
+        // 初始化时加载 Cookie
+        loadFromCookie();
+
+        // 监听回车键，仅应用于“购买彩票”按钮
+        document.getElementById('lottery').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                playGame();
+            }
+        });
+
+        function playGame() {
+            const percentage = parseInt(document.getElementById('percentage').value);
+            const lottery = parseInt(document.getElementById('lottery').value);
+            const resultDiv = document.getElementById('result');
+
+            // 检查号码是否在 1-5 之间
+            if (isNaN(lottery) || lottery < 1 || lottery > 5) {
+                resultDiv.textContent = "请输入 1-5 之间的号码！";
+                return;
+            }
+
+            const spent = money / percentage;
+            const num = Math.floor(Math.random() * 5) + 1; // 中奖号码范围：1-5
+            time++;
+
+            if (num === lottery) {
+                const winAmount = spent * 5;
+                money += winAmount;
+                resultDiv.textContent = `祝贺！你赢得了 ${winAmount.toFixed(2)} 元！`;
+                totalProfit += winAmount;
+                singleProfit = winAmount;
+                singleLoss = 0;
+                if (winAmount > maxProfit) {
+                    maxProfit = winAmount;
+                }
+            } else {
+                money -= spent;
+                resultDiv.textContent = "哈哈哈哈菜就多练！";
+                totalLoss += spent;
+                singleLoss = spent;
+                singleProfit = 0;
+            }
+
+            if (money > moneymax) {
+                moneymax = money;
+            }
+
+            if (time > maxRound) {
+                maxRound = time;
+            }
+
+            if (money <= 1) {
+                resultDiv.textContent += " 游戏结束！";
+                document.querySelector('button').disabled = true;
+            }
+
+            // 更新界面
+            document.getElementById('money-display').textContent = `当前金额：${money.toFixed(2)} 元`;
+            document.getElementById('current-round').textContent = time;
+            document.getElementById('max-money').textContent = moneymax.toFixed(2);
+            document.getElementById('max-round').textContent = maxRound;
+            document.getElementById('max-profit').textContent = maxProfit.toFixed(2);
+            document.getElementById('total-profit').textContent = totalProfit.toFixed(2);
+            document.getElementById('total-loss').textContent = totalLoss.toFixed(2);
+            document.getElementById('single-profit').textContent = singleProfit.toFixed(2);
+            document.getElementById('single-loss').textContent = singleLoss.toFixed(2);
+
+            // 保存战绩到 Cookie
+            saveToCookie();
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            money = 100;
+            time = 0;
+            document.getElementById('money-display').textContent = `当前金额：${money.toFixed(2)} 元`;
+            document.getElementById('current-round').textContent = time;
+            document.getElementById('result').textContent = "";
+            document.querySelector('button').disabled = false;
+        }
+
+        // 切换历史记录显示
+        function toggleHistory() {
+            const historyDiv = document.getElementById('history');
+            historyDiv.style.display = historyDiv.style.display === 'none' ? 'block' : 'none';
+        }
+        // 清空战绩
+        function clearRecords() {
+            moneymax = 0;
+            maxRound = 0;
+            maxProfit = 0;
+            totalProfit = 0;
+            totalLoss = 0;
+            document.cookie = "moneymax=0; path=/; max-age=31536000";
+            document.cookie = "maxRound=0; path=/; max-age=31536000";
+            document.cookie = "maxProfit=0; path=/; max-age=31536000";
+            document.cookie = "totalProfit=0; path=/; max-age=31536000";
+            document.cookie = "totalLoss=0; path=/; max-age=31536000";
+            loadFromCookie(); // 重新加载界面数据
+        }
+    </script>
+</body>
+</html>
