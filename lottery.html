@@ -222,6 +222,11 @@
                 totalProfit += winAmount;
                 gameTotalProfit += winAmount; // 更新当局总盈利
                 singleResult = winAmount; // 本次收益为正
+
+                // 更新单次最大盈利
+                if (winAmount > maxProfit) {
+                    maxProfit = winAmount;
+                }
             } else {
                 money -= spent;
                 resultDiv.textContent = "哈哈哈哈菜就多练！";
