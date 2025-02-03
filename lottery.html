@@ -26,19 +26,19 @@
         }
         h1 {
             color: #fff; /* 白色标题 */
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* 减小间距 */
         }
         .money-display {
             font-size: 24px;
-            margin: 20px 0;
+            margin: 10px 0; /* 减小间距 */
             color: #ffeb3b; /* 黄色金额显示 */
         }
         .input-group {
-            margin: 10px 0;
+            margin: 8px 0; /* 减小间距 */
         }
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 3px; /* 减小间距 */
             font-weight: bold;
             color: #fff; /* 白色标签 */
         }
@@ -59,23 +59,30 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
-            margin-top: 10px;
+            margin-top: 8px; /* 减小间距 */
         }
         button:hover {
             background-color: #fdd835; /* 深黄色悬停效果 */
         }
         .result {
-            margin-top: 20px;
+            margin-top: 10px; /* 减小间距 */
             font-size: 18px;
             color: #ffeb3b; /* 黄色结果文字 */
         }
         .history {
-            margin-top: 20px;
+            margin-top: 10px; /* 减小间距 */
             font-size: 16px;
             color: #fff; /* 白色历史记录 */
             display: none; /* 默认隐藏 */
         }
+        .history p {
+            margin: 5px 0; /* 减小间距 */
+        }
         .restart-button {
+            background-color: #ffeb3b; /* 黄色按钮 */
+            color: #ff5722; /* 红色文字 */
+        }
+        .clear-records-button {
             position: absolute;
             bottom: 20px;
             right: 20px;
@@ -83,7 +90,13 @@
             color: #fff;
         }
         .toggle-history {
-            margin-top: 10px;
+            margin-top: 8px; /* 减小间距 */
+        }
+        .single-round {
+            margin-top: 10px; /* 减小间距 */
+        }
+        .single-round p {
+            margin: 5px 0; /* 减小间距 */
         }
     </style>
 </head>
@@ -104,7 +117,7 @@
             <input type="number" id="lottery" min="1" max="5" value="1">
         </div>
         <button onclick="playGame()">购买彩票</button>
-        <button onclick="clearRecords()">清空战绩</button>
+        <button class="restart-button" onclick="restartGame()">重新开始</button>
         <button class="toggle-history" onclick="toggleHistory()">历史记录</button>
         <div class="result" id="result"></div>
         <div class="history" id="history">
@@ -116,11 +129,12 @@
         </div>
         <div class="single-round">
             <p>当前轮数：<span id="current-round">0</span> 轮</p>
-            <p>本局盈利：<span id="single-profit">0</span> 元</p>
-            <p>本局亏损：<span id="single-loss">0</span> 元</p>
+            <p>本次收益：<span id="single-result">0</span> 元</p>
+            <p>当局总盈利：<span id="game-total-profit">0</span> 元</p>
+            <p>当局总亏损：<span id="game-total-loss">0</span> 元</p>
         </div>
     </div>
-    <button class="restart-button" onclick="restartGame()">重新开始</button>
+    <button class="clear-records-button" onclick="clearRecords()">清空战绩</button>
 
     <script>
         let money = 100;
@@ -130,8 +144,9 @@
         let maxProfit = 0;
         let totalProfit = 0;
         let totalLoss = 0;
-        let singleProfit = 0;
-        let singleLoss = 0;
+        let singleResult = 0; // 本次收益
+        let gameTotalProfit = 0; // 当局总盈利
+        let gameTotalLoss = 0; // 当局总亏损
 
         // 从 Cookie 中加载战绩
         function loadFromCookie() {
@@ -172,11 +187,20 @@
         // 监听回车键，仅应用于“购买彩票”按钮
         document.getElementById('lottery').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                playGame();
+                if (money > 1) { // 检查金额是否足够
+                    playGame();
+                } else {
+                    document.getElementById('result').textContent = "金额不足，无法购买！";
+                }
             }
         });
 
         function playGame() {
+            if (money <= 1) { // 检查金额是否足够
+                document.getElementById('result').textContent = "金额不足，无法购买！";
+                return;
+            }
+
             const percentage = parseInt(document.getElementById('percentage').value);
             const lottery = parseInt(document.getElementById('lottery').value);
             const resultDiv = document.getElementById('result');
@@ -196,17 +220,14 @@
                 money += winAmount;
                 resultDiv.textContent = `祝贺！你赢得了 ${winAmount.toFixed(2)} 元！`;
                 totalProfit += winAmount;
-                singleProfit = winAmount;
-                singleLoss = 0;
-                if (winAmount > maxProfit) {
-                    maxProfit = winAmount;
-                }
+                gameTotalProfit += winAmount; // 更新当局总盈利
+                singleResult = winAmount; // 本次收益为正
             } else {
                 money -= spent;
                 resultDiv.textContent = "哈哈哈哈菜就多练！";
                 totalLoss += spent;
-                singleLoss = spent;
-                singleProfit = 0;
+                gameTotalLoss += spent; // 更新当局总亏损
+                singleResult = -spent; // 本次收益为负
             }
 
             if (money > moneymax) {
@@ -230,8 +251,9 @@
             document.getElementById('max-profit').textContent = maxProfit.toFixed(2);
             document.getElementById('total-profit').textContent = totalProfit.toFixed(2);
             document.getElementById('total-loss').textContent = totalLoss.toFixed(2);
-            document.getElementById('single-profit').textContent = singleProfit.toFixed(2);
-            document.getElementById('single-loss').textContent = singleLoss.toFixed(2);
+            document.getElementById('single-result').textContent = singleResult.toFixed(2);
+            document.getElementById('game-total-profit').textContent = gameTotalProfit.toFixed(2);
+            document.getElementById('game-total-loss').textContent = gameTotalLoss.toFixed(2);
 
             // 保存战绩到 Cookie
             saveToCookie();
@@ -241,9 +263,14 @@
         function restartGame() {
             money = 100;
             time = 0;
+            gameTotalProfit = 0; // 重置当局总盈利
+            gameTotalLoss = 0; // 重置当局总亏损
             document.getElementById('money-display').textContent = `当前金额：${money.toFixed(2)} 元`;
             document.getElementById('current-round').textContent = time;
             document.getElementById('result').textContent = "";
+            document.getElementById('single-result').textContent = "0";
+            document.getElementById('game-total-profit').textContent = gameTotalProfit.toFixed(2);
+            document.getElementById('game-total-loss').textContent = gameTotalLoss.toFixed(2);
             document.querySelector('button').disabled = false;
         }
 
@@ -252,6 +279,7 @@
             const historyDiv = document.getElementById('history');
             historyDiv.style.display = historyDiv.style.display === 'none' ? 'block' : 'none';
         }
+
         // 清空战绩
         function clearRecords() {
             moneymax = 0;
