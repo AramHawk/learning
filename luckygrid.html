@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级点名程序</title>
+    <style>
+        /* 页面样式 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* 网格容器样式 */
+        .grid-container {
+            display: grid;
+            gap: 10px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* 单元格样式 */
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cell:hover {
+            background-color: #45a049;
+        }
+
+        .cell.selected {
+            background-color: #ff6347 !important;
+            animation: selected 0.5s ease;
+        }
+
+        .cell.empty {
+            background-color: #e0e0e0;
+            cursor: default;
+        }
+
+        .cell.disabled {
+            background-color: #ffeb3b !important;
+            cursor: not-allowed;
+        }
+
+        .cell.disabled.selected {
+            background-color: #ffeb3b !important;
+        }
+
+        @keyframes selected {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .digit-num {
+            width: 80px;
+            height: 40px;
+            text-align: center;
+            font-weight: bold;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>班级点名程序</h1>
+    <div class="grid-container" id="gridContainer"></div>
+    <div class="control-panel">
+        <div>
+            <label>今天有</label>
+            <input class="digit-num" type="number" id="txtNum" min="1" value="53" placeholder="?">
+            <label>个幸运儿</label>
+        </div>
+        <button id="btnRandom">开始随机</button>
+    </div>
+
+<script>
+    let currentStudents = [];
+    let disableStudents = [];
+    let isPicking = false;
+    let pickedNumbers = getCookie('pickedNumbers') ? JSON.parse(getCookie('pickedNumbers')) : [];//fisher队列
+
+    // Fisher-Yates随机算法
+    function _getRandom(max, count) {
+            // 创建完整号列表
+        const numbers = Array.from({ length: max }, (_, index) => index+1);
+        
+        // Fisher-Yates 洗牌算法
+        for (let i = numbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        
+        // 返回需要的数量
+        return numbers.slice(0,count);
+    }
+
+    // 创建网格函数
+    function createGrid(totalStudents) {
+        const gridContainer = document.getElementById('gridContainer');
+        gridContainer.innerHTML = '';
+
+        const size = Math.ceil(Math.sqrt(totalStudents));
+        const columns = size;
+        const rows = Math.ceil(totalStudents / columns);
+        const totalCells = rows * columns;
+
+        gridContainer.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+        gridContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+        //currentStudents = Array.from({ length: totalStudents }, (_, i) => i + 1);
+        //remainingStudents = fisherYatesShuffle([...currentStudents]);
+
+        for (let i = 1; i <= totalCells; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+
+            if (i <= totalStudents) {
+                cell.textContent = i;
+                cell.dataset.number = i;
+
+                /*if (pickedNumbers.includes(i)) {
+                    cell.classList.add('disabled');
+                }*/
+            } else {
+                cell.classList.add('empty');
+            }
+
+            cell.addEventListener('click', handleClick);
+
+            gridContainer.appendChild(cell);
+        }
+    }
+
+    // 随机选择10个单元格并逐个变红，500毫秒后恢复绿色
+    function randomShowAnimate(totalStudents, count, pickedNumber) {
+        const cells = document.querySelectorAll('.cell:not(.empty)');
+        const selectedIndices = new Set();
+
+        // 随机选择10个不同的单元格
+        while (selectedIndices.size < count) {
+            const randomIndex = Math.floor(Math.random() * totalStudents);
+            selectedIndices.add(randomIndex);
+        }
+
+        // 将Set转换为数组
+        const indicesArray = Array.from(selectedIndices);
+        const promises = [];
+        // 逐个变红
+        indicesArray.forEach((index, i) => {
+            promises.push(new Promise((innerResolve) => {
+                setTimeout(() => {
+                    const cell = cells[index];
+                    cell.classList.add('selected');
+                    cell.style.backgroundColor = '#ff6347'; // 选中时的红色
+
+                    
+                    // 动画结束时resolve
+                    setTimeout(() => {
+                        cell.classList.remove('selected');
+                        cell.style.backgroundColor = '#4CAF50'; // 恢复绿色
+                        innerResolve();
+                    }, 200);
+                }, i * 70);
+            }));
+        });
+        //播放全部动画
+        Promise.all(promises).then(()=>showSelected(pickedNumber));
+    }
+
+    // 处理随机点名
+    function pickRandomStudent() {
+        let person = document.getElementById('txtNum').value;
+        if(pickedNumbers.length<(person*0.1)+1 || pickedNumbers.length>person*0.7) pickedNumbers=_getRandom(person, person*0.7);
+
+        const pickedNumber = +pickedNumbers.pop();
+
+        // 更新已抽取号数队列
+        disableStudents.forEach((num, i)=>{
+            const removedCell = document.querySelector(`.cell[data-number="${num}"]`);
+            if (removedCell) {
+                removedCell.classList.add('disabled');
+                removedCell.style.pointerEvents = 'none';
+            }
+        });
+        
+
+        randomShowAnimate(person, 30, pickedNumber);
+
+        disableStudents.push(pickedNumber);
+        console.info(pickedNumbers);
+        setCookie('pickedNumbers', JSON.stringify(pickedNumbers), 7); // 保存7天
+    }
+
+    //选中动画
+    function showSelected(iperson){
+        const cell = document.querySelector(`.cell[data-number="${iperson}"]`);
+        if (cell) {
+            cell.classList.add('selected');
+            cell.style.backgroundColor = '#ff6347'; // 选中时的红色
+        }
+    }
+
+    // 重新开始
+    function resetGrid() {
+        pickedNumbers = [];
+        setCookie('pickedNumbers', JSON.stringify(pickedNumbers), 7); // 清空cookie
+        createGrid(parseInt(document.getElementById('txtNum').value || 10));
+    }
+
+    // 事件处理函数
+    function handleClick() {
+        if (!this.classList.contains('empty')) {
+            this.classList.toggle('disabled');
+        }
+    }
+
+    // Cookie操作函数
+    function setCookie(name, value, days) {
+        const date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+        const cookie = document.cookie.match(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`);
+        return cookie ? cookie.pop() : null;
+    }
+
+    // 初始化事件监听
+    document.getElementById('txtNum').addEventListener('input', function () {
+        createGrid(parseInt(this.value) || 10);
+    });
+
+    document.getElementById('btnRandom').addEventListener('click', function () {
+        if (!isPicking) {
+            isPicking = true;
+            pickRandomStudent();
+            isPicking = false;
+        }
+    });
+
+    // 初始加载
+    createGrid(53);
+</script>
+</body>
+</html>
