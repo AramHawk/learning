@@ -62,12 +62,12 @@
         }
 
         .cell.disabled {
-            background-color: #ffeb3b !important;
+            background-color: #fadb14 !important;
             cursor: not-allowed;
         }
 
         .cell.disabled.selected {
-            background-color: #ffeb3b !important;
+            background-color: #fadb14 !important;
         }
 
         @keyframes selected {
@@ -128,7 +128,7 @@
 <script>
     let currentStudents = [];
     let disableStudents = [];
-    let isPicking = false;
+    let isPicking = false; //正在动画中
     let pickedNumbers = getCookie('pickedNumbers') ? JSON.parse(getCookie('pickedNumbers')) : [];//fisher队列
 
     // Fisher-Yates随机算法
@@ -159,8 +159,6 @@
         gridContainer.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
         gridContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
 
-        //currentStudents = Array.from({ length: totalStudents }, (_, i) => i + 1);
-        //remainingStudents = fisherYatesShuffle([...currentStudents]);
 
         for (let i = 1; i <= totalCells; i++) {
             const cell = document.createElement('div');
@@ -170,9 +168,6 @@
                 cell.textContent = i;
                 cell.dataset.number = i;
 
-                /*if (pickedNumbers.includes(i)) {
-                    cell.classList.add('disabled');
-                }*/
             } else {
                 cell.classList.add('empty');
             }
@@ -183,19 +178,19 @@
         }
     }
 
-    // 随机选择10个单元格并逐个变红，500毫秒后恢复绿色
+    // 随机选择n个单元格并逐个变红，200毫秒后恢复绿色; count决定动画时长.
     function randomShowAnimate(totalStudents, count, pickedNumber) {
         const cells = document.querySelectorAll('.cell:not(.empty)');
-        const selectedIndices = new Set();
+        const selectedIndices = [];
 
-        // 随机选择10个不同的单元格
-        while (selectedIndices.size < count) {
+        // 随机选择n个不同的单元格
+        while (selectedIndices.length < count) {
             const randomIndex = Math.floor(Math.random() * totalStudents);
-            selectedIndices.add(randomIndex);
+            selectedIndices.push(randomIndex);
         }
 
-        // 将Set转换为数组
-        const indicesArray = Array.from(selectedIndices);
+
+        const indicesArray = selectedIndices;
         const promises = [];
         // 逐个变红
         indicesArray.forEach((index, i) => {
@@ -236,7 +231,7 @@
         });
         
 
-        randomShowAnimate(person, 30, pickedNumber);
+        randomShowAnimate(person, 23, pickedNumber);
 
         disableStudents.push(pickedNumber);
         console.info(pickedNumbers);
@@ -245,6 +240,7 @@
 
     //选中动画
     function showSelected(iperson){
+        isPicking = false;
         const cell = document.querySelector(`.cell[data-number="${iperson}"]`);
         if (cell) {
             cell.classList.add('selected');
@@ -252,12 +248,6 @@
         }
     }
 
-    // 重新开始
-    function resetGrid() {
-        pickedNumbers = [];
-        setCookie('pickedNumbers', JSON.stringify(pickedNumbers), 7); // 清空cookie
-        createGrid(parseInt(document.getElementById('txtNum').value || 10));
-    }
 
     // 事件处理函数
     function handleClick() {
@@ -280,19 +270,21 @@
 
     // 初始化事件监听
     document.getElementById('txtNum').addEventListener('input', function () {
-        createGrid(parseInt(this.value) || 10);
+        createGrid(parseInt(this.value) || 53);
     });
 
     document.getElementById('btnRandom').addEventListener('click', function () {
         if (!isPicking) {
             isPicking = true;
             pickRandomStudent();
-            isPicking = false;
+            //点名开始，保存人数设定
+            setCookie('studentCount', document.getElementById('txtNum').value,7);
         }
     });
 
     // 初始加载
-    createGrid(53);
+    document.getElementById('txtNum').value = (getCookie('studentCount')||53);
+    createGrid(document.getElementById('txtNum').value);
 </script>
 </body>
 </html>
