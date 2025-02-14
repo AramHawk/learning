@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>班级点名程序</title>
+    <title>幸运大轮盘</title>
     <style>
         /* 页面样式 */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f8ff;
             margin: 0;
-            padding: 20px;
+            padding: 2px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -142,10 +142,19 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: none;
+            color: #80808080;
+            text-align: right;
+            z-index: -1; /* 添加这一行 */
+        }
     </style>
 </head>
 <body>
-    <h1>班级点名程序</h1>
+    <h1>看看谁是幸运儿</h1>
     <div class="grid-container" id="gridContainer"></div>
     <div class="control-panel">
         <div>
@@ -157,7 +166,8 @@
     </div>
 
     <div id="card">8</div>
-
+    <footer><p>©2025,Aramyang。 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>已在<a style="color:#808080" href="https://www.github.com/aramhawk/learning">Github</a>开源，使用的主题 由 deepseek 辅助开发.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></footer>
+    <p></p>
 <script>
     let currentStudents = [];
     let disableStudents = [];
