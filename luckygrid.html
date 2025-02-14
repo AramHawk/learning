@@ -21,6 +21,37 @@
             margin-bottom: 20px;
         }
 
+        /* 选中卡片动画 */
+        #card {
+            display: none;
+            position: absolute;
+            width: 140px;
+            height: 200px;
+            background: linear-gradient(135deg, #ff6347, #ffa07a); /* 以 #ff6347 为主的渐变色 */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            justify-content: center;
+            align-items: center;
+            font-size: 6rem;
+            font-weight: bold;
+            color: #fff;
+            animation: zoomIn 0.5s ease-out forwards;
+            border: 2px solid #ccc;
+            left: 50%; 
+            top: 50%; 
+            transform-origin: center; /* 动画从中心点放大 */
+            transform: translate(-50%, -50%) scale(0); /* 初始状态：居中并缩小 */
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: translate(-50%, -50%) scale(0); /* 从缩小状态开始 */
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1); /* 放大并保持居中 */
+            }
+        }
+
         /* 网格容器样式 */
         .grid-container {
             display: grid;
@@ -55,6 +86,11 @@
             background-color: #ff6347 !important;
             animation: selected 0.5s ease;
         }
+        @keyframes selected {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
 
         .cell.empty {
             background-color: #e0e0e0;
@@ -70,11 +106,6 @@
             background-color: #fadb14 !important;
         }
 
-        @keyframes selected {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
 
         .control-panel {
             display: flex;
@@ -124,6 +155,8 @@
         </div>
         <button id="btnRandom">开始随机</button>
     </div>
+
+    <div id="card">8</div>
 
 <script>
     let currentStudents = [];
@@ -245,7 +278,19 @@
         if (cell) {
             cell.classList.add('selected');
             cell.style.backgroundColor = '#ff6347'; // 选中时的红色
+            showCard(iperson);//继续卡片动画
         }
+    }
+    function showCard(iperson) {
+        const card = document.getElementById('card');
+        card.innerHTML = iperson;
+        card.style.display = 'flex';
+        card.style.animation = 'zoomIn 0.5s ease-out forwards';
+
+        // 3秒后隐藏卡片
+        setTimeout(() => {
+            card.style.display = 'none';
+        }, 3000);
     }
 
 
@@ -275,6 +320,7 @@
 
     document.getElementById('btnRandom').addEventListener('click', function () {
         if (!isPicking) {
+            document.getElementById('card').style.display = 'none';
             isPicking = true;
             pickRandomStudent();
             //点名开始，保存人数设定
