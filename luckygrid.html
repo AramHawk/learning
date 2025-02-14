@@ -262,7 +262,10 @@
         let person = document.getElementById('txtNum').value;
         if(pickedNumbers.length<(person*0.1)+1 || pickedNumbers.length>person*0.7) pickedNumbers=_getRandom(person, person*0.7);
 
-        const pickedNumber = +pickedNumbers.pop();
+        let pickedNumber = +pickedNumbers.pop();
+        while(pickedNumbers.length && document.querySelector(`.cell[data-number="${pickedNumber}"]`).classList.contains('disabled')){
+            pickedNumber = 0+pickedNumbers.pop();//跳过已禁用号码
+        }
 
         // 更新已抽取号数队列
         disableStudents.forEach((num, i)=>{
