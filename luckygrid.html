@@ -27,18 +27,18 @@
             position: absolute;
             width: 140px;
             height: 200px;
-            background: linear-gradient(135deg, #ff6347, #ffa07a); /* 以 #ff6347 为主的渐变色 */
+            background: linear-gradient(135deg, #f5222d, #fa541c); /* 以 #ff6347 为主的渐变色 */
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: none;
+            box-shadow: 0 4px 16px #d48806;
             justify-content: center;
             align-items: center;
             font-size: 6rem;
             font-weight: bold;
             color: #fff;
             animation: zoomIn 0.5s ease-out forwards;
-            border: 2px solid #ccc;
-            left: 50%; 
-            top: 50%; 
+            left: 50%;
+            top: 50%;
             transform-origin: center; /* 动画从中心点放大 */
             transform: translate(-50%, -50%) scale(0); /* 初始状态：居中并缩小 */
         }
@@ -48,7 +48,7 @@
                 transform: translate(-50%, -50%) scale(0); /* 从缩小状态开始 */
             }
             to {
-                transform: translate(-50%, -50%) scale(1); /* 放大并保持居中 */
+                transform: translate(-50%, -50%) scale(1.8); /* 放大并保持居中 */
             }
         }
 
@@ -168,13 +168,13 @@
     function _getRandom(max, count) {
             // 创建完整号列表
         const numbers = Array.from({ length: max }, (_, index) => index+1);
-        
+
         // Fisher-Yates 洗牌算法
         for (let i = numbers.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
         }
-        
+
         // 返回需要的数量
         return numbers.slice(0,count);
     }
@@ -233,7 +233,7 @@
                     cell.classList.add('selected');
                     cell.style.backgroundColor = '#ff6347'; // 选中时的红色
 
-                    
+
                     // 动画结束时resolve
                     setTimeout(() => {
                         cell.classList.remove('selected');
@@ -262,7 +262,7 @@
                 removedCell.style.pointerEvents = 'none';
             }
         });
-        
+
 
         randomShowAnimate(person, 23, pickedNumber);
 
@@ -287,10 +287,10 @@
         card.style.display = 'flex';
         card.style.animation = 'zoomIn 0.5s ease-out forwards';
 
-        // 3秒后隐藏卡片
+        /*4秒后隐藏卡片*/
         setTimeout(() => {
             card.style.display = 'none';
-        }, 3000);
+        }, 4000);
     }
 
 
