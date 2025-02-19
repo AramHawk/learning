@@ -93,12 +93,12 @@
         }
 
         .cell.empty {
-            background-color: #e0e0e0;
+            background-color: #e0e0e0 !important;
             cursor: default;
         }
 
         .cell.disabled {
-            background-color: #fadb14 !important;
+            background-color: #fadb14;
             cursor: not-allowed;
         }
 
@@ -168,11 +168,58 @@
     <div id="card">8</div>
     <footer><p>©2025,Aramyang。 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>已在<a style="color:#808080" href="https://www.github.com/aramhawk/learning">Github</a>开源，使用的主题 由 deepseek 辅助开发.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></footer>
     <p></p>
+<script type="text/javascript">
+    // Cookie操作函数
+    function setCookie(name, value, days) {
+        const date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+        const cookie = document.cookie.match(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`);
+        return cookie ? cookie.pop() : null;
+    }
+
+
+    class AbsentStudents {
+        constructor() {
+            const c = getCookie('absentStudents');
+            this.abscents = c==null?[]:c.split(',');
+        }
+        show(){
+            this.abscents.forEach((item,i)=>{
+                let cell=document.querySelector(`.cell[data-number="${item}"]`);
+                if(cell){
+                    cell.classList.add('empty');
+                }
+            })
+        }
+        add(num){
+            if( !this.abscents.includes(num)){
+                this.abscents.push(num);
+                this._save();
+            }
+        }
+        del(num){
+            if( this.abscents.includes(num)){
+                let arr = this.abscents;
+                arr.splice(arr.indexOf(num), 1);
+                this._save();
+            }
+        }
+        _save(){
+            setCookie('absentStudents', this.abscents.join(','),7);
+        }
+    }
+</script>
+
 <script>
     let currentStudents = [];
     let disableStudents = [];
     let isPicking = false; //正在动画中
     let pickedNumbers = getCookie('pickedNumbers') ? JSON.parse(getCookie('pickedNumbers')) : [];//fisher队列
+    let absentStudents = new AbsentStudents();
 
     // Fisher-Yates随机算法
     function _getRandom(max, count) {
@@ -223,7 +270,7 @@
 
     // 随机选择n个单元格并逐个变红，200毫秒后恢复绿色; count决定动画时长.
     function randomShowAnimate(totalStudents, count, pickedNumber) {
-        const cells = document.querySelectorAll('.cell:not(.empty)');
+        const cells = document.querySelectorAll('.cell');
         const selectedIndices = [];
 
         // 随机选择n个不同的单元格
@@ -247,7 +294,7 @@
                     // 动画结束时resolve
                     setTimeout(() => {
                         cell.classList.remove('selected');
-                        cell.style.backgroundColor = '#4CAF50'; // 恢复绿色
+                        cell.style.backgroundColor = '';//'#4CAF50' 恢复绿色
                         innerResolve();
                     }, 200);
                 }, i * 70);
@@ -279,7 +326,7 @@
         randomShowAnimate(person, 23, pickedNumber);
 
         disableStudents.push(pickedNumber);
-        console.info(pickedNumbers);
+        console.info(absentStudents.abscents);
         setCookie('pickedNumbers', JSON.stringify(pickedNumbers), 7); // 保存7天
     }
 
@@ -308,20 +355,18 @@
     // 事件处理函数
     function handleClick() {
         if (!this.classList.contains('empty')) {
-            this.classList.toggle('disabled');
+            if(this.classList.contains('disabled')){
+                this.classList.add('empty'); //黄色按钮改缺席
+                absentStudents.add(this.dataset.number);
+            }else{
+                this.classList.remove('empty');
+                this.classList.toggle('disabled');
+            }
+        }else if(this.dataset.number>0){
+            this.classList.remove('disabled');
+            this.classList.remove('empty');
+            absentStudents.del(this.dataset.number);
         }
-    }
-
-    // Cookie操作函数
-    function setCookie(name, value, days) {
-        const date = new Date();
-        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-        document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
-    }
-
-    function getCookie(name) {
-        const cookie = document.cookie.match(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`);
-        return cookie ? cookie.pop() : null;
     }
 
     // 初始化事件监听
@@ -346,6 +391,8 @@
     // 初始加载
     document.getElementById('txtNum').value = (getCookie('studentCount')||53);
     createGrid(document.getElementById('txtNum').value);
+    absentStudents.show();
+
 </script>
 </body>
 </html>
